@@ -1,0 +1,19 @@
+# basic
+epochs: 300
+lr: 0.01
+run_type: train
+# etc
+weight_decay: 0.0001
+# load
+resume: null
+init: null
+
+# quantization
+quantizer: LSQ
+bitw: 4
+bita: 4
+first_conv_bitw: 8
+last_fc_bitw: 8
+
+# lr policy
+lr_policy: cosine
