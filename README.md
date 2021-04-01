@@ -31,12 +31,12 @@ python main.py --gpu 0 --workers 8 --dataset cifar100 --datapath ../data --run-t
 
 
 ## Experiments
-| Model | CIFAR10 (%) | CIFAR100 (%) |
-| :------- | :-------: | :-------: |
-| ResNet-20 [[1]](#1) | - | - |
-| ResNet-56 | - | 71.56 |
-| PreActResNet-20 [[2]](#2) | - | - |
-| PreActResNet-56 | - | - |
+| Model | CIFAR10 (%) | CIFAR100 (%) | ImageNet (%) |
+| :------- | :-------: | :-------: | :-------: |
+| ResNet-20 [[1]](#1) | - | - | - |
+| ResNet-56 | - | 71.56 | - |
+| PreActResNet-20 [[2]](#2) | - | - | - |
+| PreActResNet-56 | - | - | - |
 
 
 ## Citations
