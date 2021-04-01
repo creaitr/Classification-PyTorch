@@ -16,7 +16,6 @@ import torch.backends.cudnn as cudnn
 from config import parse_arguments
 # r/w training
 import models
-import quantization
 import dataset
 # utils
 from utils import *
@@ -31,29 +30,27 @@ def main():
     
     # set the name of model
     arch_name = models.utils.set_arch_name(cfg)
-    print(arch_name); exit()
+    
     ####    Init logger    ####
     if cfg.resume is None and cfg.eval is None:
         log_path = Path('logs') / arch_name / cfg.dataset
-        if cfg.name is not None:
-            log_path = log_path / cfg.name
-            if cfg.idx is not None:
-                log_path = log_path / str(cfg.idx)
+        log_path = log_path / cfg.name if cfg.name is not None else log_path
+        log_path = log_path / str(cfg.idx) if cfg.idx is not None else log_path
         assert not log_path.exists(), 'PATH:%s is already exist.' % (log_path)
     else:
-        log_path = Path(cfg.resume) if cfg.eval is None else Path(cfg.eval)
+        if cfg.eval is not None:
+            log_path = Path(cfg.eval)
+        elif cfg.resume is not None:
+            log_path = Path(cfg.resume)
         assert log_path.exists(), 'There is no PATH:%s.' % (log_path)
     # make a logger
     logger = Logger(log_path, cfg)
     
     ####    Construct a model    ####
-    # set a quantizer
-    logger.print('Setting quantization mode to %s ...' % cfg.quantization)
-    quantizer = quantization.__dict__[cfg.quantization]
     # set a model
     logger.print('Building a model (%s) ...' % arch_name)
-    model, image_size = models.__dict__[cfg.arch](cfg.dataset, quantizer.qnn, cfg)
-    #summary(copy.deepcopy(model), (3, image_size, image_size), device='cpu')   # since an inference while summarize, the initial state couldn't be properly updated.
+    model, image_size = models.__dict__[cfg.arch](cfg)
+    #summary(copy.deepcopy(model), (3, image_size, image_size), device='cpu')
     # set a loss
     criterion = nn.CrossEntropyLoss()
 
@@ -106,8 +103,7 @@ def main():
                 cfg, train_loader,
                 epoch=epoch, model=model, criterion=criterion,
                 optimizer=optimizer, scheduler=scheduler,
-                logger=logger, device=device,
-                quantizer=quantizer)
+                logger=logger, device=device)
             
             # validation
             logger.print('[ Validation ]')
@@ -117,15 +113,8 @@ def main():
                 logger=logger, device=device)
 
             # after epoch
-            # save the last model
-            save_last(logger.log_path, model,
-                      state, optimizer, scheduler)
-            # save the best model
-            is_best = acc1_val >= state['best_acc']
-            state['best_acc'] = max(acc1_val, state['best_acc'])
-            if is_best:
-                copy_last(logger.log_path)
-                logger.print('Best checkpoint is saved ...')
+            # save the model
+            save(acc1_val, logger, model, state, optimizer, scheduler)
 
             # summary
             logger.summarize({'epoch': epoch,
@@ -156,58 +145,9 @@ def main():
         logger.print('Evaluate end')
         return acc1_val
 
-    elif cfg.run_type == 'extract':
-        feature_path = Path('features') / str(logger.log_path).replace('/', '_')
-        if not feature_path.exists():
-            feature_path.mkdir()
-        
-        def save_feature(self, input, output):
-            mat = output.cpu().numpy()
-            if mat.ndim == 4:
-                mat = np.mean(mat, axis=(2,3))
-            
-            if self.extracted is None:
-                self.extracted = mat
-            else:
-                self.extracted = np.vstack((self.extracted, mat))
-
-        for name, module in model.named_modules():
-            if isinstance(module, quantizer.qnn.QuantConv2d) or isinstance(module, quantizer.qnn.QuantLinear):
-                module.extracted = None
-                module.register_forward_hook(save_feature)
-                
-                temp_path = feature_path / name
-                if not temp_path.exists():
-                    temp_path.mkdir()
-        
-        logger.print('Extract start')
-
-        k = 0
-        model.eval()
-        with torch.no_grad():
-            for i, (input, target) in enumerate(val_loader):
-                if device is not 'cpu':
-                    input = input.cuda(non_blocking=True)
-                    target = target.cuda(non_blocking=True)
-
-                output = model(input)
-        
-                if model.module.conv1.extracted.shape[0] > 10000:
-                    for name, module in model.named_modules():
-                        if isinstance(module, quantizer.qnn.QuantConv2d) or isinstance(module, quantizer.qnn.QuantLinear):
-                            np.save(feature_path / name / (str(k).zfill(1) + '.npy'), module.extracted)
-                            module.extracted = None
-                    k += 1
-            k += 1
-            for name, module in model.named_modules():
-                if isinstance(module, quantizer.qnn.QuantConv2d) or isinstance(module, quantizer.qnn.QuantLinear):
-                    np.save(feature_path / name / (str(k).zfill(1) + '.npy'), module.extracted)
-        
-        logger.print('Extract end')
-
 
 ####    Train    ####
-def train(cfg, train_loader, epoch, model, criterion, optimizer, scheduler, logger, device='cpu', quantizer=None, **kwargs):
+def train(cfg, train_loader, epoch, model, criterion, optimizer, scheduler, logger, device='cpu', **kwargs):
     r"""Train model each epoch
     """
     batch_time = AverageMeter('Time', ':6.3f')
@@ -234,16 +174,9 @@ def train(cfg, train_loader, epoch, model, criterion, optimizer, scheduler, logg
             input = input.cuda(non_blocking=True)
             target = target.cuda(non_blocking=True)
 
-        # update mask
-        if cfg.centralize and cfg.mask_update:
-            if globals()['iterations'] % cfg.cent_freq == 0 and epoch < 0.7 * cfg.epochs:
-                quantizer.update_mask(cfg, model, cfg.slw_rate)
-                #quantizer.update_mask_step(model)
-
+        # model inference
         output = model(input)
         loss = criterion(output, target)
-        if cfg.cent_reg and 'regularize' in quantizer.__dict__.keys():
-            loss += quantizer.regularize_th(cfg, epoch + i / iters, model)
 
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
@@ -264,9 +197,10 @@ def train(cfg, train_loader, epoch, model, criterion, optimizer, scheduler, logg
 
         # after batch
         globals()['iterations'] += 1
-        if (time.time() - timer.times['print']) % 60 > 1 or i == len(train_loader) - 1:   # over 1s
+        #if (time.time() - timer.times['print']) % 60 > 1 or i == len(train_loader) - 1:   # over 1s
+        if i % cfg.print_freq == 0:
             progress.print(i)
-            timer.start('print')
+            #timer.start('print')
 
         timer.start('data', 'batch')
 
@@ -276,18 +210,10 @@ def train(cfg, train_loader, epoch, model, criterion, optimizer, scheduler, logg
     timer.end('train')
 
     # report
-    print()
+    #print()
     logger.print('Results: Time {}  Loss {:.4e}  Acc@1 {:.3f}  Acc@5 {:.3f}'.format(
         timer.get('train'), losses.avg, top1.avg, top5.avg))
-    # print center probability
-    if cfg.centralize:
-        if cfg.cent_reg:
-            cent_prob = quantizer.cal_cent_prob_step(model)
-        elif cfg.mask_init:
-            cent_prob = quantizer.cal_cent_prob_static_mask(model)
-        elif cfg.mask_update:
-            cent_prob = quantizer.cal_cent_prob_dynamic_mask(model)
-        logger.print('center prob: {:.4f}%'.format(cent_prob * 100))
+    
     return losses.avg, round(top1.avg.item(), 4), round(top5.avg.item(), 4)
 
 
@@ -332,9 +258,10 @@ def validate(cfg, val_loader, epoch, model, criterion, logger, device='cpu', **k
             batch_time.update(timer.times['batch'])
 
             # after batch
-            if (time.time() - timer.times['print']) % 60 > 1 or i == len(val_loader) - 1:   # over 1s
+            #if (time.time() - timer.times['print']) % 60 > 1 or i == len(val_loader) - 1:   # over 1s
+            if i % cfg.print_freq == 0:
                 progress.print(i)
-                timer.start('print')
+                #timer.start('print')
 
             timer.start('data', 'batch')
     
@@ -342,7 +269,7 @@ def validate(cfg, val_loader, epoch, model, criterion, logger, device='cpu', **k
     timer.end('validate')
 
     # report
-    print()
+    #print()
     logger.print('Results: Time {}  Loss {:.4e}  Acc@1 {:.3f}  Acc@5 {:.3f}'.format(
         timer.get('validate'), losses.avg, top1.avg, top5.avg))
     

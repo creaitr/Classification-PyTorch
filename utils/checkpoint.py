@@ -27,9 +27,9 @@ def load_model(ckpt_path, model,
     if state is not None:
         state.update(ckpt['state'])
     if optimizer is not None:
-        optimizer.load_state_dict(checkpoint['optimizer'])
+        optimizer.load_state_dict(ckpt['optimizer'])
     if scheduler is not None:
-        scheduler.load_state_dict(checkpoint['scheduler'])
+        scheduler.load_state_dict(ckpt['scheduler'])
 
 
 def load_optim_state(ckpt_path, model, optimizer, device='cpu'):
@@ -138,3 +138,16 @@ def save_last(log_path, model, state, optimizer, scheduler):
 def copy_last(log_path):
     shutil.copyfile(os.path.join(log_path, last_ckpt),
                     os.path.join(log_path, best_ckpt))
+
+
+def save(acc1_val, logger, model, state, optimizer, scheduler):
+    # save the last model
+    save_last(logger.log_path, model,
+              state, optimizer, scheduler)
+    
+    # save the best model
+    is_best = acc1_val >= state['best_acc']
+    state['best_acc'] = max(acc1_val, state['best_acc'])
+    if is_best:
+        copy_last(logger.log_path)
+        logger.print('Best checkpoint is saved ...')

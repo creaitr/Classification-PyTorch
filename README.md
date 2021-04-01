@@ -2,14 +2,35 @@
 Various implementations of classification models using PyTorch framework.
 
 
-## Requirements
+## Environments
 * python==3.7
 * torch==1.5.0
 * torchvision==0.6.0
-* pyyaml, torchsummary
+* others: pyyaml, torchsummary
 
 
-## Implementations
+## Run
+### 1. Train
+```
+# CIFAR100
+python main.py --name base --idx 0 -g 0 -j 8 --dataset cifar100 --datapath ../data --arch resnet --layers 20 --batch-size 128 --run-type train --epochs 300 --lr 0.1 --sched cosine --sched-batch --wd 1e-4
+
+# ImageNet
+python main.py --name base --idx 0 -g 0 1 2 3 -j 16 --dataset imagenet --datapath /dataset/ImageNet --arch resnet --layers 18 --batch-size 256 --run-type train --epochs 90 --lr 0.1 --sched cosine --sched-batch --wd 1e-4
+```
+
+### 2. Resume
+```
+python main.py --gpu 0 --workers 8 --dataset cifar100 --datapath ../data --run-type train --resume logs/resnet20/cifar100/base/0
+```
+
+### 3. Evaluate
+```
+python main.py --gpu 0 --workers 8 --dataset cifar100 --datapath ../data --run-type evaluate --eval logs/resnet20/cifar100/base/0
+```
+
+
+## Experiments
 ---
 
 - DoReFa-net [[1]](#1)
@@ -39,6 +60,13 @@ Evaludation of ResNet-18 on CIFAR-100 (full-precision: 77.05)
 | QIL [[3]](#3)        | 00.00 | 00.00 | 00.00 | 00.00 | 00.00 |
 | PACT [[2]](#2)       | 00.00 | 00.00 | 00.00 | 00.00 | 00.00 |
 | DoReFa-net [[1]](#1) | 00.00 | 00.00 | 00.00 | 00.00 | 00.00 |
+
+
+| | CIFAR10 || CIFAR100 ||
+| Acc (%) | Top-1 | Top-5 | Top-1 | Top-5 |
+| :------- | :-------: | :-------: | :-------: | :-------: |
+| ResNet-20 | - | - | - | - |
+| ResNet-56 | - | - | 71.56 | - |
 
 Citations
 ---

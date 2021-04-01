@@ -80,6 +80,9 @@ def parse_arguments():
                         help='multiplicative factor of learning rate decay (default: 0.1)')
     parser.add_argument('--sched-batch', default='True', action='store_true',
                         help='update the learning rate for every batch (sched: cos)')
+    # etc
+    parser.add_argument('--print-freq', default=100, type=int, metavar='N',
+                        help='print frequency (default: 100)')
 
     args = parser.parse_args()
     

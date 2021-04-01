@@ -33,8 +33,7 @@ class Logger:
             # load the configuration for resume
             load_config(cfg, log_path / 'config.yaml')
         
-        self.logging_cfg = Path('logging.conf')
-        self.logger, self.csv_logger = self.init_logger(self.log_path, self.logging_cfg, cfg)
+        self.logger, self.csv_logger = self.init_logger(self.log_path, Path('logging.conf'), cfg)
 
     def init_logger(self, log_path, logging_cfg, cfg):
         logging.config.fileConfig(logging_cfg,
@@ -44,12 +43,18 @@ class Logger:
                                             'csvfilemode': 'w' if cfg.resume is None and cfg.eval is None else 'a'})
         # for logger
         logger = logging.getLogger('root')
-        logger.info('Log file for this {}: {}'.format('run' if cfg.resume is None else 'resume',
-                                                      str(log_path / 'logs.log')))
+        if cfg.resume is None and cfg.eval is None:
+            logger.info('Start training and logging at here: {}'.format(str(log_path / 'logs.log')))
+        elif cfg.resume is not None:
+            logger.info(''); logger.info('')
+            logger.info('Resume the training')
+        elif cfg.eval is not None:
+            logger.info(''); logger.info('')
+            logger.info('Evaluate the trained model')
         
         # for csv logger
         csv_logger = logging.getLogger('summary')
-        if cfg.resume is None:
+        if cfg.resume is None and cfg.eval is None:
             head = self.keys[0]
             for i in range(1, len(self.keys)):
                 head += ',' + self.keys[i]
