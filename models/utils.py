@@ -8,7 +8,7 @@ def set_arch_name(cfg):
     arch_name = copy.deepcopy(cfg.arch)
     if cfg.arch in ['resnet', 'preactresnet']:
         arch_name += str(cfg.layers)
-    leif cfg.arch in ['wideresnet']:
+    elif cfg.arch in ['wideresnet']:
         arch_name += str(cfg.layers) + '-' + str(int(cfg.width_mult))
     elif cfg.arch in ['shufflenetv2', 'mobilenetv2', 'rexnet']:
         if cfg.width_mult != 1.0:
