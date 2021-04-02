@@ -13,10 +13,10 @@ Various implementations of classification models using PyTorch framework.
 ### 1. Train
 ```
 # CIFAR100
-python main.py --name base --idx 0 -g 0 -j 8 --dataset cifar100 --datapath ../data --arch resnet --layers 20 --batch-size 128 --run-type train --epochs 300 --lr 0.1 --sched cosine --sched-batch --wd 1e-4
+python main.py --name base --idx 0 -g 0 -j 8 --dataset cifar100 --datapath ../data --arch resnet --layers 20 --batch-size 128 --run-type train --epochs 300 --lr 0.1 --sched cosine --sched-batch --wd 1e-4 --print-freq 100
 
 # ImageNet
-python main.py --name base --idx 0 -g 0 1 2 3 -j 16 --dataset imagenet --datapath /dataset/ImageNet --arch resnet --layers 18 --batch-size 256 --run-type train --epochs 90 --lr 0.1 --sched cosine --sched-batch --wd 1e-4
+python main.py --name base --idx 0 -g 0 1 2 3 -j 16 --dataset imagenet --datapath /dataset/ImageNet --arch resnet --layers 18 --batch-size 256 --run-type train --epochs 90 --lr 0.1 --sched cosine --sched-batch --wd 1e-4 --print-freq 1000
 ```
 
 ### 2. Resume
@@ -37,6 +37,11 @@ python main.py --gpu 0 --workers 8 --dataset cifar100 --datapath ../data --run-t
 | ResNet-56 | - | 71.56 | - |
 | PreActResNet-20 [[2]](#2) | - | - | - |
 | PreActResNet-56 | - | - | - |
+| WideResNet | - | - | - |
+| ShuffleNetV2 | - | - | - |
+| MobileNetV2 | - | - | - |
+| ReXNet | - | - | - |
+| - | - | - | - |
 
 
 ## Citations
