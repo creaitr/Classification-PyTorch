@@ -32,16 +32,16 @@ class Trainer:
         self.memory = {} # e.g., iteration
 
     ### device ###
-    def set_device(self, cfg):
-        if cfg.device == 'gpu' and torch.cuda.is_available():
-            torch.cuda.set_device(cfg.gpu[0])
-            with torch.cuda.device(cfg.gpu[0]):
-                model = model.cuda()
-                criterion = criterion.cuda()
-            model = nn.DataParallel(model, device_ids=cfg.gpu,
-                                    output_device=cfg.gpu[0])
+    def set_device(self):
+        if self.cfg.device == 'gpu' and torch.cuda.is_available():
+            torch.cuda.set_device(self.cfg.gpu[0])
+            with torch.cuda.device(self.cfg.gpu[0]):
+                self.model = self.model.cuda()
+                self.criterion = self.criterion.cuda()
+            self.model = nn.DataParallel(self.model, device_ids=self.cfg.gpu,
+                                    output_device=self.cfg.gpu[0])
             cudnn.benchmark = True
-            self.device = 'cuda:%d' % cfg.gpu[0]
+            self.device = 'cuda:%d' % self.cfg.gpu[0]
         else:
             self.device = 'cpu'
 

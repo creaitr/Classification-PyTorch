@@ -49,7 +49,7 @@ def main():
                       loaders=loaders, logger=logger)
 
     # set device
-    trainer.set_device(cfg)
+    trainer.set_device()
 
     # run
     if cfg.run_type == 'train':

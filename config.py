@@ -9,7 +9,7 @@ def add_arguments(parser):
     # model architecture
     parser.add_argument("-a", "--arch", default="resnet", type=str, metavar="ARCH", choices=avail_archs,
                         help="model architecture (default: resnet")
-    parser.add_argument('--layers', default=18, type=int, metavar='N',
+    parser.add_argument('--layers', default=20, type=int, metavar='N',
                         help='number of layers in the neural network (default: 18)')
     parser.add_argument('--width-mult', default=1.0, type=float, metavar='WM',
                         help='width multiplier uniformly at each layer (default: 1.0)')
@@ -47,9 +47,8 @@ def add_arguments(parser):
                         help='number of total epochs to run (default: 300)')
     parser.add_argument('--optimizer', default='SGD', type=str,
                         help='name of optimizer to train the model (default: SGD)')
-    parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
-                        metavar='LR', help='initial learning rate (default: 0.1)',
-                        dest='lr')
+    parser.add_argument('--lr', '--learning-rate', default=0.1, type=float, metavar='LR',
+                        help='initial learning rate (default: 0.1)')
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                         help='momentum (default: 0.9)')
     parser.add_argument('--wd', '--weight-decay', dest='weight_decay', default=1e-4, type=float,
