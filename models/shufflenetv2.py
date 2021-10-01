@@ -198,7 +198,7 @@ model_cfgs = {
 }
 
 
-def shufflenetv2(cfg):
+def set_model(cfg):
     r"""
     Args:
         cfg: configuration

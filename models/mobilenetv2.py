@@ -185,7 +185,7 @@ class MobileNetV2_CIFAR(nn.Module):
         return x
 
 
-def mobilenetv2(cfg):
+def set_model(cfg):
     r"""
     Args:
         cfg: configuration

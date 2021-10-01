@@ -244,7 +244,7 @@ class ReXNetV1_CIFAR(nn.Module):
         return x
 
 
-def rexnet(cfg):
+def set_model(cfg):
     r""" ReXNet models
     Args:
         cfg: configuration

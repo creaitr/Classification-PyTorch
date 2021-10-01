@@ -46,7 +46,6 @@ class ProgressMeter(object):
     def print(self, batch):
         entries = [self.prefix + self.batch_fmtstr.format(batch)]
         entries += [str(meter) for meter in self.meters]
-        #sys.stdout.write('\r')
         print(' '.join(entries), end='\n')
 
     def _get_batch_fmtstr(self, num_batches):
