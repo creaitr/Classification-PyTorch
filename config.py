@@ -7,8 +7,8 @@ from datasets import avail_datasets
 def add_arguments(parser):
     ####    Basic Configuration    ####
     # model architecture
-    parser.add_argument("-a", "--arch", default="preactresnet", type=str, metavar="ARCH", choices=avail_archs,
-                        help="model architecture")
+    parser.add_argument("-a", "--arch", default="resnet", type=str, metavar="ARCH", choices=avail_archs,
+                        help="model architecture (default: resnet")
     parser.add_argument('--layers', default=18, type=int, metavar='N',
                         help='number of layers in the neural network (default: 18)')
     parser.add_argument('--width-mult', default=1.0, type=float, metavar='WM',
