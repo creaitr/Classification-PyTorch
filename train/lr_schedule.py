@@ -6,25 +6,32 @@ import numpy as np
 import torch
 
 
-def set_scheduler(optimizer, cfg):
+def set_lr_scheduler(optimizer, cfg):
     r"""Sets the learning rate scheduler
     """
-    if cfg.scheduler == 'step':
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, cfg.step_size, cfg.gamma)
-    elif cfg.scheduler == 'multistep':
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, cfg.milestones, cfg.gamma)
-    elif cfg.scheduler == 'exp':
-        scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, cfg.gamma)
-    elif cfg.scheduler == 'cosine':
-        #scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=cfg.epochs)
-        #scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=cfg.epochs)
-        scheduler = WarmupCosineAnnealing(optimizer, epochs=cfg.epochs, warmup_epoch=0)
-    elif cfg.scheduler == 'warmup_cosine':
-        scheduler = WarmupCosineAnnealing(optimizer, epochs=cfg.epochs, warmup_epoch=5)
+    if cfg.lr_scheduler == 'step':
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, cfg.step_size, cfg.step_gamma)
+    elif cfg.lr_scheduler == 'multistep':
+        lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, cfg.step_milestones, cfg.step_gamma)
+    elif cfg.lr_scheduler == 'exp':
+        lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, cfg.step_gamma)
+    elif cfg.lr_scheduler == 'cosine':
+        #lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=cfg.epochs)
+        #lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=cfg.epochs)
+        lr_scheduler = WarmupCosineAnnealing(optimizer, epochs=cfg.epochs, warmup_epoch=0)
+    elif cfg.lr_scheduler == 'warmup_cosine':
+        lr_scheduler = WarmupCosineAnnealing(optimizer, epochs=cfg.epochs, warmup_epoch=cfg.warmup)
     else:
-        raise ValueError('==> unavailable scheduler:%s' % cfg.scheduler)
+        raise ValueError('==> unavailable lr_scheduler:%s' % cfg.scheduler)
 
-    return scheduler
+    return lr_scheduler
+
+def step_lr_epoch(trainer):
+    trainer.lr_scheduler.step()
+
+def step_lr_batch(trainer):
+    curr = trainer.reports['epoch'] + (trainer.memory['i'] + 1) / trainer.memory['batch_len_trn']
+    trainer.lr_scheduler.step(curr)
 
 
 class WarmupCosineAnnealing(torch.optim.lr_scheduler._LRScheduler):

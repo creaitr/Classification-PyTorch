@@ -17,7 +17,7 @@ def conv1x1(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
 
-def relu(inplace=True):
+def relu(inplace=False):
     """ReLU activation"""
     return nn.ReLU(inplace=inplace)
 
@@ -311,7 +311,7 @@ model_cfgs_cifar = {
 }
 
 
-def resnet(cfg):
+def set_model(cfg):
     r"""ResNet models from "[Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385)"
     Args:
         cfg: configuration

@@ -1,75 +1,105 @@
 import os
 import time
+import shutil
 import yaml
-import pathlib
 from pathlib import Path
 import logging
 import logging.config
 
-from .config_utils import load_config
+from .parse import load_yaml
 
 
 class Logger:
-    keys = ['epoch',
-            'loss_trn',
-            'acc1_trn',
-            'acc5_trn',
-            'loss_val',
-            'acc1_val',
-            'acc5_val']
+    config_name = 'config.yaml'
+    logging_conf_path = Path(__file__).parent / 'logging.conf'
+    log_name = 'logs.log'
+    summary_name = 'summary.yaml'
+    ckpt_name = 'best.pth'
 
-    def __init__(self, log_path, cfg):
-        self.log_path = log_path
+    def __init__(self, cfg, arch_name):
+        self.arch_name = arch_name
         
-        # for the first training
-        if cfg.resume is None and cfg.eval is None:
-            # make a log directory
-            log_path.mkdir(exist_ok=True, parents=True)
+        self.logger = None
+        self.summary_logger = None
 
-            # save the configuration
-            with (log_path / 'config.yaml').open('w') as f:
-                yaml.dump(vars(cfg), f, sort_keys=False)
+        # set logger
+        if cfg.run_type == 'train' and not cfg.resume:
+            # initialize a logger
+            self.initialize(cfg, arch_name)
         else:
-            # load the configuration for resume
-            load_config(cfg, log_path / 'config.yaml')
-        
-        self.logger, self.csv_logger = self.init_logger(self.log_path, Path('logging.conf'), cfg)
+            assert cfg.load != None, f'The cfg.load:{cfg.load} should be setted.'
+            assert cfg.load.exists(), f'The cfg.load:{cfg.load} is not exists.'
 
-    def init_logger(self, log_path, logging_cfg, cfg):
-        logging.config.fileConfig(logging_cfg,
-                                  defaults={'logfilename': str(log_path / 'logs.log'),
-                                            'logfilemode': 'w' if cfg.resume is None and cfg.eval is None else 'a',
-                                            'csvfilename': str(log_path / 'summary.csv'),
-                                            'csvfilemode': 'w' if cfg.resume is None and cfg.eval is None else 'a'})
-        # for logger
-        logger = logging.getLogger('root')
-        if cfg.resume is None and cfg.eval is None:
-            logger.info('Start training and logging at here: {}'.format(str(log_path / 'logs.log')))
-        elif cfg.resume is not None:
-            logger.info(''); logger.info('')
-            logger.info('Resume the training')
-        elif cfg.eval is not None:
-            logger.info(''); logger.info('')
-            logger.info('Evaluate the trained model')
-        
-        # for csv logger
-        csv_logger = logging.getLogger('summary')
-        if cfg.resume is None and cfg.eval is None:
-            head = self.keys[0]
-            for i in range(1, len(self.keys)):
-                head += ',' + self.keys[i]
-            csv_logger.info(head)
-        return logger, csv_logger
+            if cfg.resume:
+                assert cfg.load.is_dir(), f'The cfg.load:{cfg.load} should be a directory.'
+                # load a logger
+                self.load(cfg)
+            
+            elif cfg.run_type in ['validate', 'test', 'analyze']:
+                if cfg.load.is_dir():
+                    self.load(cfg)
+                elif cfg.load.is_file():
+                    self.initialize(cfg, arch_name)
+                    shutil.copyfile(str(cfg.load), str(self.log_path / self.ckpt_name))
+
+        # print initial logs
+        if cfg.run_type == 'train':
+            if not cfg.resume:
+                self.print('Train a model')
+                self.print(f'Logs are being written at:{self.log_path}')
+            else:
+                self.print('\n')
+                self.print('Resume the training')
+        else:
+            self.print('\n')
+            self.print('Evaluate the trained model')
+
+    def initialize(self, cfg, arch_name):
+        # set a log path
+        self.log_path = Path('logs') / arch_name / cfg.dataset
+        if cfg.name != None:
+            self.log_path = self.log_path / cfg.name
+        if cfg.idx != None:
+            self.log_path = self.log_path / str(cfg.idx)
+        assert not self.log_path.exists(), f'PATH:{self.log_path} is already exists.'
+
+        # make a log directory
+        self.log_path.mkdir(exist_ok=True, parents=True)
+
+        # save the configuration
+        with (self.log_path / self.config_name).open('w') as f:
+            yaml.dump(vars(cfg), f, sort_keys=False)
+
+        # set python loggers
+        self.set_logger(mode='w')
+    
+    def load(self, cfg):
+        # set a log path
+        self.log_path = cfg.load
+
+        # load the yaml files for resume a training or test a model
+        load_yaml(cfg, self.log_path / self.config_name)
+
+        # set python loggers
+        self.set_logger(mode='a')
+
+    def set_logger(self, mode='w'):
+        logging.config.fileConfig(self.logging_conf_path,
+            defaults={'logfilename': str(self.log_path / self.log_name),
+                      'logfilemode': mode,
+                      'csvfilename': str(self.log_path / self.summary_name),
+                      'csvfilemode': mode})
+
+        self.logger = logging.getLogger('root')
+        self.summary_logger = logging.getLogger('summary')
 
     def print(self, msg):
         self.logger.info(msg)
 
-    def summarize(self, results):
-        row = str(results[self.keys[0]])
-        for i in range(1, len(self.keys)):
-            if self.keys[i] in results.keys():
-                row += ',' + str(results[self.keys[i]])
-            else:
-                row += ',-'
-        self.csv_logger.info(row)
-        
+    def summarize(self, dic):
+        assert isinstance(dic, dict), 'The type of object for summary should be dictionary.'
+        self.summary_logger.info(f'- {str(dic)}')
+
+
+def summarize_reports(trainer):
+    trainer.logger.summarize(trainer.reports)
