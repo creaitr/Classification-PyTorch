@@ -99,7 +99,7 @@ class Trainer:
         self.run_hooks('after_train')
 
         self.logger.print('Training end')
-        return self.states['best_acc']
+        self.logger.print(f'Best Acc1: {self.states["best_acc"]:.3f}%')
 
     def validate(self):
         # init parameters
@@ -120,7 +120,6 @@ class Trainer:
         self.run_hooks('after_epoch')
 
         self.logger.print('Validation end')
-        return self.reports['acc1_val']
     
     def train_epoch(self):
         r"""Train model each epoch

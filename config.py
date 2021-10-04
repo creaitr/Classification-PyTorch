@@ -51,7 +51,7 @@ def add_arguments(parser):
                         help='initial learning rate (default: 0.1)')
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                         help='momentum (default: 0.9)')
-    parser.add_argument('--wd', '--weight-decay', dest='weight_decay', default=1e-4, type=float,
+    parser.add_argument('--wd', '--weight-decay', dest='weight_decay', default=5e-4, type=float,
                         help='weight decay (default: 1e-4)')
     parser.add_argument('--nest', '--nesterov', dest='nesterov', action='store_true',
                         help='use nesterov momentum?')

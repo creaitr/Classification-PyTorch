@@ -65,16 +65,14 @@ def main():
             trainer.register_hooks(loc='after_batch', func=[step_lr_batch])
         trainer.register_hooks(loc='after_epoch', func=[save_train, summarize_reports])
 
-        result = trainer.train()
-        print('Best Acc1: {:.3f}%'.format(result))
+        trainer.train()
 
     elif cfg.run_type == 'validate':
         # set hooks
         trainer.register_hooks(loc='before_epoch', func=[load_valid])
         trainer.register_hooks(loc='after_epoch', func=[summarize_reports])
 
-        result = trainer.validate()
-        print('Acc1: {:.3f}%'.format(result))
+        trainer.validate()
     
     elif cfg.run_type == 'test':
         # set hooks
