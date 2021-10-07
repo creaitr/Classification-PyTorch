@@ -1,14 +1,12 @@
-# packages
+# torch
 import torch
 import torch.nn as nn
 from thop import profile #ptflops
-# parsing
-from utils import parse_arguments
-from config import add_arguments
-# training
+# packages
 import models
 import datasets
 import utils
+from utils import parse_arguments, add_arguments
 from utils import summarize_reports
 from train import Trainer, set_optimizer, set_lr_scheduler
 from train import load_init, load_resume, load_valid, save_train, save_pred

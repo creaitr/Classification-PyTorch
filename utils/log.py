@@ -6,7 +6,7 @@ from pathlib import Path
 import logging
 import logging.config
 
-from .parse import load_yaml
+from .config import load_yaml
 
 
 class Logger:
