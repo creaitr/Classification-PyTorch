@@ -71,10 +71,8 @@ def add_arguments(parser):
     parser.add_argument('--warmup', default=5, type=int,
                         help='the number of epochs for warmup training')
     # etc
-    parser.add_argument("--name", default=None, type=str,
-                        help="Experiment name to append to the logpath")
-    parser.add_argument("--idx", default=None, type=int,
-                        help="The index of experiment name to append to the logpath")
+    parser.add_argument("--savepath", default=[], type=str, nargs='+',
+                        help="Sub-paths to save the results, e.g., '--savepath base 0' -> 'logs/resnet-20/cifar100/base/0'")
     parser.add_argument('--print-freq', default=100, type=int, metavar='N',
                         help='print frequency (default: 100)')
 

@@ -84,13 +84,13 @@ class PreActBottleneck(nn.Module):
         width = int(planes * (base_width / 64.)) * groups
         # Both self.conv2 and self.downsample layers downsample the input when stride != 1
         self.bn1 = bn(inplanes)
-        self.relu1 = relu(inplace=False)
+        self.relu1 = relu(inplace=True)
         self.conv1 = conv1x1(inplanes, width)
         self.bn2 = bn(planes)
-        self.relu2 = relu(inplace=False)
+        self.relu2 = relu(inplace=True)
         self.conv2 = conv3x3(width, width, stride, groups, dilation)
         self.bn3 = bn(planes)
-        self.relu3 = relu(inplace=False)
+        self.relu3 = relu(inplace=True)
         self.conv3 = conv1x1(width, planes * self.expansion)
         self.downsample = downsample
         self.stride = stride

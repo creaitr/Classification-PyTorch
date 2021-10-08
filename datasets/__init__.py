@@ -3,7 +3,7 @@ avail_datasets = ['cifar10', 'cifar100', 'imagenet']
 for dataset in avail_datasets:
     exec(f'from .{dataset} import set_dataset as {dataset}')
 
-def set_dataset(cfg, image_size, train=True, val=True, test=False):
+def set_dataset(cfg, image_size, train=True, val=True, test=False, hooks=[]):
     assert cfg.dataset in avail_datasets, f'The dataset:{cfg.dataset} is not supported.'
 
     if cfg.run_type == 'train':
@@ -16,5 +16,5 @@ def set_dataset(cfg, image_size, train=True, val=True, test=False):
         train = False; val = True; test = False
 
     _local = locals()
-    exec(f'loaders = {cfg.dataset}(cfg, image_size, train, val, test)', globals(), _local)
+    exec(f'loaders = {cfg.dataset}(cfg, image_size, train, val, test, hooks)', globals(), _local)
     return _local['loaders']

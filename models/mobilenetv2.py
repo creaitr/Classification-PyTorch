@@ -63,7 +63,7 @@ class InvertedResidual(nn.Module):
 
 class MobileNetV2(nn.Module):
     '''Original MobileNetV2'''
-    def __init__(self, image_size=224, num_classes=1000, width_mult=1.0):
+    def __init__(self, num_classes=1000, width_mult=1.0):
         super(MobileNetV2, self).__init__()
         block = InvertedResidual
         input_channel = 32
@@ -194,12 +194,12 @@ def set_model(cfg):
     if cfg.dataset in ['cifar10', 'cifar100']:
         image_size = 32
         num_classes = int(cfg.dataset[5:])
-        model = MobileNetV2_CIFAR(image_size, num_classes, cfg.width_mult)
+        model = MobileNetV2_CIFAR(num_classes, cfg.width_mult)
 
     elif cfg.dataset in ['imagenet']:
         image_size = 224
         num_classes = 1000
-        model = MobileNetV2(image_size, num_classes, cfg.width_mult)
+        model = MobileNetV2(num_classes, cfg.width_mult)
 
     else:
         raise Exception('Undefined dataset for MobileNetV2 architecture.')

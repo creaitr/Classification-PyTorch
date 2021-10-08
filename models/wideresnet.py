@@ -79,13 +79,13 @@ class Bottleneck(nn.Module):
         # Both self.conv2 and self.downsample layers downsample the input when stride != 1
         self.conv1 = conv1x1(inplanes, width)
         self.bn1 = bn(width)
-        self.relu1 = relu(inplace=False)
+        self.relu1 = relu(inplace=True)
         self.conv2 = conv3x3(width, width, stride, groups, dilation)
         self.bn2 = bn(width)
-        self.relu2 = relu(inplace=False)
+        self.relu2 = relu(inplace=True)
         self.conv3 = conv1x1(width, planes * self.expansion)
         self.bn3 = bn(planes * self.expansion)
-        self.relu3 = relu(inplace=False)
+        self.relu3 = relu(inplace=True)
         self.downsample = downsample
         self.stride = stride
 

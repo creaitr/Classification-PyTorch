@@ -57,10 +57,8 @@ class Logger:
     def initialize(self, cfg, arch_name):
         # set a log path
         self.log_path = Path('logs') / arch_name / cfg.dataset
-        if cfg.name != None:
-            self.log_path = self.log_path / cfg.name
-        if cfg.idx != None:
-            self.log_path = self.log_path / str(cfg.idx)
+        for subpath in cfg.savepath:
+            self.log_path = self.log_path / subpath
         assert not self.log_path.exists(), f'PATH:{self.log_path} is already exists.'
 
         # make a log directory

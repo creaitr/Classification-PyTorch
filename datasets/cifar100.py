@@ -6,10 +6,10 @@ from torchvision.datasets import CIFAR100
 
 
 class Cifar100(object):  
-    def __init__(self, cfg):
+    def __init__(self, cfg, image_size=32):
         self.datapath = cfg.datapath
 
-        self.image_size = 32
+        self.image_size = image_size
         self.num_classes = 100
         self.batch_size = cfg.batch_size
 
@@ -20,13 +20,20 @@ class Cifar100(object):
             mean=[0.5071, 0.4865, 0.4409],
             std=[0.2673, 0.2564, 0.2762])
 
-    def train_loader(self):
-        transform_train = transforms.Compose([
-            transforms.RandomCrop(32, padding=4),
+        self.transforms_train = [
+            transforms.RandomCrop(self.image_size, padding=4),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            self.normalize,
-        ])
+        ]
+
+        self.transforms_val = [
+            transforms.ToTensor(),
+        ]
+
+    def train_loader(self):
+        transform_train = transforms.Compose(
+            self.transforms_train + [self.normalize]
+        )
 
         trainset = CIFAR100(
             root=self.datapath, train=True, download=True,
@@ -40,10 +47,9 @@ class Cifar100(object):
         return train_loader
     
     def val_loader(self):
-        transform_val = transforms.Compose([
-            transforms.ToTensor(),
-            self.normalize,
-        ])
+        transform_val = transforms.Compose(
+            self.transforms_val + [self.normalize]
+        )
 
         valset = CIFAR100(
             root=self.datapath, train=False, download=True,
@@ -60,12 +66,17 @@ class Cifar100(object):
         return None
 
 
-def set_dataset(cfg, image_size, train=True, val=True, test=False):
+def set_dataset(cfg, image_size=32, train=True, val=True, test=False, hooks=[]):
     assert image_size == 32, "The image size for CIFAR dataset should be 32."
     assert not test, "There is no test data for CIFAR dataset."
 
-    dataset = Cifar100(cfg)
+    dataset = Cifar100(cfg, image_size)
 
+    # run hooks
+    for func in hooks:
+        func(cfg, dataset)
+
+    # set loaders
     loaders = {}
     loaders['train'] = dataset.train_loader() if train else None
     loaders['val'] = dataset.val_loader() if val else None
