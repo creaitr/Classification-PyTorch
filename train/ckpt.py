@@ -20,7 +20,7 @@ def load_init(trainer):
     trainer.logger.print(f'Initialize the model from the checkpoint:{trainer.cfg.load}')
     load_model(ckpt_path=trainer.cfg.load, model=trainer.model,
                states=None, optimizer=None, lr_scheduler=None,
-               device=trainer.cfg.device, strict=False)
+               device=trainer.device, strict=False)
 
 
 def load_resume(trainer):
@@ -31,7 +31,7 @@ def load_resume(trainer):
     trainer.logger.print(f'Resume the training from the dir:{trainer.cfg.load}')
     load_model(ckpt_path=ckpt_path, model=trainer.model,
                states=trainer.states, optimizer=trainer.optimizer, lr_scheduler=trainer.lr_scheduler,
-               device=trainer.cfg.device, strict=True)
+               device=trainer.device, strict=True)
 
 
 def load_valid(trainer):
@@ -41,7 +41,7 @@ def load_valid(trainer):
     trainer.logger.print(f'Load the model with the checkpoint:{ckpt_path}')
     load_model(ckpt_path=ckpt_path, model=trainer.model,
                states=None, optimizer=None, lr_scheduler=None,
-               device=trainer.cfg.device, strict=False)
+               device=trainer.device, strict=False)
 
 
 def load_model(ckpt_path, model,

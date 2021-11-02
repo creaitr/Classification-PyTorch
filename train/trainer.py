@@ -83,6 +83,7 @@ class Trainer:
 
             # init
             self.reports = {'epoch': epoch}
+            self.memory['epoch'] = epoch
 
             # before epoch
             self.run_hooks('before_epoch')
